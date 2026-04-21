@@ -1,0 +1,88 @@
+-- // Configuration
+local GITHUB_LINK = "https://raw.githubusercontent.com/FuturisticSearch/US/refs/heads/main/Main.lua"
+
+-- // Cleanup old UI
+if game:GetService("CoreGui"):FindFirstChild("CleanerMenu") then
+    game:GetService("CoreGui").CleanerMenu:Destroy()
+end
+
+-- // UI Setup
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+ScreenGui.Name = "CleanerMenu"
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 160, 0, 150)
+Frame.Position = UDim2.new(0.5, -80, 0.5, -75)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.Active = true
+Frame.Draggable = true 
+Instance.new("UICorner", Frame)
+
+-- Create Buttons Function (to save space)
+local function CreateBtn(name, pos, text)
+    local btn = Instance.new("TextButton", Frame)
+    btn.Name = name
+    btn.Size = UDim2.new(1, -10, 0, 30)
+    btn.Position = pos
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = text
+    Instance.new("UICorner", btn)
+    return btn
+end
+
+local AimBtn = CreateBtn("Aim", UDim2.new(0, 5, 0, 10), "Silent Aim: OFF")
+local EspBtn = CreateBtn("Esp", UDim2.new(0, 5, 0, 45), "ESP: OFF")
+
+local FOVInput = Instance.new("TextBox", Frame)
+FOVInput.Size = UDim2.new(1, -10, 0, 30)
+FOVInput.Position = UDim2.new(0, 5, 0, 80)
+FOVInput.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+FOVInput.TextColor3 = Color3.new(1, 1, 1)
+FOVInput.Text = "150"
+FOVInput.PlaceholderText = "FOV..."
+Instance.new("UICorner", FOVInput)
+
+local Status = Instance.new("TextLabel", Frame)
+Status.Size = UDim2.new(1, 0, 0, 20)
+Status.Position = UDim2.new(0, 0, 1, -25)
+Status.Text = "Not Loaded"
+Status.TextColor3 = Color3.new(0.5, 0.5, 0.5)
+Status.BackgroundTransparency = 1
+
+-- // Logic Execution
+local scriptLoaded = false
+
+AimBtn.MouseButton1Click:Connect(function()
+    if not scriptLoaded then
+        Status.Text = "Fetching GitHub..."
+        local success, err = pcall(function()
+            loadstring(game:HttpGet(GITHUB_LINK))()
+        end)
+        if success then 
+            scriptLoaded = true 
+            Status.Text = "Loaded Successfully"
+        else 
+            Status.Text = "Error: See F9"
+            warn(err)
+            return
+        end
+    end
+    
+    getgenv().Enabled = not getgenv().Enabled
+    AimBtn.Text = "Silent Aim: " .. (getgenv().Enabled and "ON" or "OFF")
+    AimBtn.BackgroundColor3 = getgenv().Enabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(50, 50, 50)
+end)
+
+EspBtn.MouseButton1Click:Connect(function()
+    getgenv().ESP = not getgenv().ESP
+    EspBtn.Text = "ESP: " .. (getgenv().ESP and "ON" or "OFF")
+    EspBtn.BackgroundColor3 = getgenv().ESP and Color3.fromRGB(0, 100, 200) or Color3.fromRGB(50, 50, 50)
+    -- Your Main.lua should handle the actual ESP drawing using getgenv().ESP
+end)
+
+FOVInput.FocusLost:Connect(function()
+    getgenv().FOVRadius = tonumber(FOVInput.Text) or 150
+    Status.Text = "FOV: " .. getgenv().FOVRadius
+end)
